@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package demo.proto;
+
+option java_multiple_files = true;
+option java_package = "demo.proto";
+option java_outer_classname = "HelloWorldProto";
+
+/*
+ * Define the service's operations
+ */
+service Greeter {
+    rpc Greet (HelloRequest) returns (HelloResponse) {}
+    rpc MultiGreet (HelloRequest) returns (stream HelloResponse) {}
+    rpc StreamGreet (stream HelloRequest) returns (stream HelloResponse) {}
+    //stream media from EDHC to EDM
+    //for each chunk of upload returns a response
+    //then clients can have power to retry per chunk if fails
+    rpc UploadMedia(stream MediaUploadRequest) returns (stream MediaUploadResponse);
+
+}
+
+/*
+ * Define the service's data structures
+ */
+message HelloRequest {
+    string name = 1;
+}
+
+message HelloResponse {
+    string message = 1;
+}
+
+message MediaUploadRequest{
+    //chunk of media
+    bytes content =1;
+    MediaType type = 2;
+    MediaFormat format = 3;
+    //file id
+    string id = 4;
+    //start position of the file
+    //this field should be only used for retry case
+    //responsibility of using it belongs to client
+    int64 offset = 5;
+}
+
+message MediaUploadResponse{
+    UploadStatus status = 1;
+    //last position of the file
+    int64 offset =2;
+    //clients should have a reference to id
+    string id = 3;
+}
+
+enum UploadStatus{
+    UNKNOWN_STATUS = 0;
+    OK = 1;
+    FAIL = 2;
+}
+
+enum MediaType{
+    //default if not set unknown
+    UNKNOWN_TYPE = 0;
+    PHOTO = 1;
+    VIDEO = 2;
+}
+enum MediaFormat{
+    UNKNOWN_FORMAT = 0;
+    RAW = 1;
+    JPEG = 2;
+    RAW_JPEG = 3;
+    MOV = 4;
+    MP4 = 5;
+    TIFF_SEQ = 6;
+    //Allocated for future to support other formats
+}
